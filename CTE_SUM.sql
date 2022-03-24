@@ -230,12 +230,14 @@ x.cfop,
 x.valor_prestacao,
 -- o select abaixo faz a divisão do valor da saída no CTe (por chave de acesso) pelo total de saídas (CTe/BPe), depois multiplica pelo total das entradas em EFD (RO) ou soma de NFe (Fora de RO), econtrando o rateio das entradas.
 -- caso o município do emitente comece por 11 (RO) utilizamos os dados da EFD, senão utilizamos os dados das compras informadas em notas fiscais.
-case when x.emit_co_mun like '11%' then (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((z.soper)*x.valor_prestacao/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end)
-                                    else (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((w.sprod)*x.valor_prestacao/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end) end as rateio_entrada,
+case when x.emit_co_mun like '11%' then (nvl(round((z.soper)*x.valor_prestacao/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0))
+                                    else (nvl(round((w.sprod)*x.valor_prestacao/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0)) end as rateio_entrada,
 
 x.valor_prestacao -
-case when x.emit_co_mun like '11%' then (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((z.soper)*x.valor_prestacao/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end)
-                                    else (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((w.sprod)*x.valor_prestacao/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end) end as valor_liquido,
+case when x.emit_co_mun like '11%' then (nvl(round((z.soper)*x.valor_prestacao/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0))
+                                    else (nvl(round((w.sprod)*x.valor_prestacao/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0)) end as valor_liquido,
+                                    
+                                    
 
 x.cnpj_cpf_remetente, 
 x.nome_remetente, 

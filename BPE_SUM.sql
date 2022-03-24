@@ -114,16 +114,13 @@ and t.cstat in (100, 150) -- 100 autorizada 150 autorizada fora do prazo
         
         -- o select abaixo faz a divisão do valor da saída no BPe (por chave de acesso) pelo total de saídas (CTe/BPe), depois multiplica pelo total das entradas em EFD (RO) ou soma de NFe (Fora de RO), econtrando o rateio das entradas.
         -- caso o município do emitente comece por 11 (RO) utilizamos os dados da EFD, senão utilizamos os dados das compras informadas em notas fiscais.
-                                    
-          --------------------------------------------------------------------------------------------------------------------------------                          
-                                    
-         case when y.enderemit_cmun like '11%' then (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((z.soper)*y.pago/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end)
-                                    else (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((w.sprod)*y.pago/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end) end as rateio_entrada,
+                                                                            
+         case when y.enderemit_cmun like '11%' then (nvl(round((z.soper)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0))
+                                    else (nvl(round((w.sprod)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0)) end as rateio_entrada,
 
-         y.pago - 
-         case when y.enderemit_cmun like '11%' then (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((z.soper)*y.pago/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end)
-                                            else (case when (nvl(x.sumcte,0)+nvl(y.sumbpe,0)) = 0 then 0 else nvl(round((w.sprod)*y.pago/(nvl(x.sumcte,0)+nvl(y.sumbpe,0)),2),0) end) end as valor_liquido                          
-                                    
+         y.pago -
+         case when y.enderemit_cmun like '11%' then (nvl(round((z.soper)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0))
+                                            else (nvl(round((w.sprod)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0)) end as valor_liquido                         
                                     
 
          
