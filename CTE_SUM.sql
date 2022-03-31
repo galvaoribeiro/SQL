@@ -1,6 +1,17 @@
 -- 28 minutos
 -- EXECUTANDO CTE_VAF - SEM ALTERAÇÕES
 
+
+select 
+j.cnpj_emitente,
+extract(year from j.dhemi) ano, j.uf_inicio, 
+--j.uf_fim, 
+j.cod_munini, l.no_municipio, 
+--j.cod_munfim, 
+p.no_razao_social, p.co_municipio, p.co_regime_pagto, sum(j.valor_liquido) valor
+
+from (
+
 with tab_efd as ( -- sumariza o valor total das entradas, no caso de empresas de Rondônia para fazer o rateio proporcional às saídas
     select 
     extract(year from t.da_referencia)||t.co_cnpj_cpf_declarante ano_cnpj,
@@ -197,13 +208,7 @@ and t.co_tpserv in (6,7,8) --[Tipos de serviço existentes: 0 (normal), 1 (subcon
 
 )
 
-select extract(year from j.dhemi) ano, j.uf_inicio, 
---j.uf_fim, 
-j.cod_munini, l.no_municipio, 
---j.cod_munfim, 
-j.cnpj_emitente, p.co_municipio, p.no_razao_social, p.co_regime_pagto, sum(j.valor_liquido) valor
 
-from (
 
 select 
 x.chave_acesso, 
@@ -254,6 +259,8 @@ left join tab_nff w on w.ano_cnpj = x.ano_cnpj
 
     ) j LEFT JOIN BI.DM_LOCALIDADE L on l.co_municipio = j.cod_munini
         left join bi.dm_pessoa p on p.co_cnpj_cpf = j.cnpj_emitente
+        
+        where j.valor_liquido >= 0
     
     group by
     

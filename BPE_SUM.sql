@@ -1,4 +1,5 @@
--- 58 minutos
+
+
 with tab_efd as ( -- sumariza o valor total das entradas, no caso de empresas de Rondônia para fazer o rateio proporcional às saídas
     select 
     extract(year from t.da_referencia)||t.co_cnpj_cpf_declarante ano_cnpj,
@@ -84,13 +85,15 @@ and t.ide_cmunini <> t.ide_cmunfim -- município de origem deve ser diferente do 
 and t.cstat in (100, 150) -- 100 autorizada 150 autorizada fora do prazo
 
         )
-        
-        select extract(year from j.dhemi) ano, j.uf_inicio, 
+
+  select 
+j.cnpj,
+extract(year from j.dhemi) ano, j.uf_inicio, 
         --j.uf_fim, 
         j.cod_munini, l.no_municipio, 
         --j.cod_munfim, 
-        j.cnpj, p.no_razao_social, p.co_municipio, p.co_regime_pagto, sum(valor_liquido) valor from (
-        
+         p.no_razao_social, p.co_municipio, p.co_regime_pagto, sum(valor_liquido) valor from (      
+
         select
         y.chave_acesso, 
         y.dhemi, 
@@ -111,29 +114,30 @@ and t.cstat in (100, 150) -- 100 autorizada 150 autorizada fora do prazo
         y.valor_bilhete,
         y.infvalorbpe_vDesconto as valor_desconto,
         y.pago as valor_pago,
-        
+
         -- o select abaixo faz a divisão do valor da saída no BPe (por chave de acesso) pelo total de saídas (CTe/BPe), depois multiplica pelo total das entradas em EFD (RO) ou soma de NFe (Fora de RO), econtrando o rateio das entradas.
         -- caso o município do emitente comece por 11 (RO) utilizamos os dados da EFD, senão utilizamos os dados das compras informadas em notas fiscais.
-                                                                            
+
+          --------------------------------------------------------------------------------------------------------------------------------                          
+
          case when y.enderemit_cmun like '11%' then (nvl(round((z.soper)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0))
                                     else (nvl(round((w.sprod)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0)) end as rateio_entrada,
 
          y.pago -
          case when y.enderemit_cmun like '11%' then (nvl(round((z.soper)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0))
                                             else (nvl(round((w.sprod)*y.pago/(NULLIF(nvl(x.sumcte,0),0)+NULLIF(nvl(y.sumbpe,0),0)),2),0)) end as valor_liquido                         
-                                    
+           
 
-         
          from tab_bpe y
-         
+
          left join tab_cte x on y.ano_cnpj = x.ano_cnpj
          left join tab_efd z on y.ano_cnpj = z.ano_cnpj 
          left join tab_nff w on y.ano_cnpj = w.ano_cnpj
-         
+
             ) j LEFT JOIN BI.DM_LOCALIDADE l on l.co_municipio = j.cod_munini
                 left join bi.dm_pessoa p on p.co_cnpj_cpf = j.cnpj
-                
-            
+            where j.valor_liquido >= 0
+
             group by 
             extract(year from j.dhemi), 
             j.uf_inicio, 
@@ -145,4 +149,3 @@ and t.cstat in (100, 150) -- 100 autorizada 150 autorizada fora do prazo
             p.no_razao_social,
             p.co_municipio,
             p.co_regime_pagto
-
